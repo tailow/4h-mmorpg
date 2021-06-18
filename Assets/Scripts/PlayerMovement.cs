@@ -9,6 +9,8 @@ public class PlayerMovement : MonoBehaviour
     public float jumpForce;
     public float defaultCameraDistance;
 
+    public Animator animator;
+
     float cameraDistance = 10000;
 
     Camera playerCamera;
@@ -27,10 +29,16 @@ public class PlayerMovement : MonoBehaviour
         Vector3 movementDir = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical")).normalized;
         Vector3 movement = movementDir * movementSpeed * Time.deltaTime;
         rigid.MovePosition(rigid.position + transform.TransformDirection(movement));
+
+        animator.SetFloat("Speed", movementSpeed * movement.magnitude);
+
+        animator.SetFloat("Direction", Input.GetAxisRaw("Horizontal"));
     }
 
     private void Update()
     {
+        animator.SetBool("Jump", false);
+
         // camera clipping
         Vector3 cameraDefaultPos = transform.position + (playerCamera.transform.position - transform.position).normalized * defaultCameraDistance;
 
@@ -66,10 +74,13 @@ public class PlayerMovement : MonoBehaviour
         // jumping
         if (Input.GetButtonDown("Jump"))
         {
-            if (Physics.Raycast(transform.position, Vector3.down, 1.1f))
+            if (Physics.Raycast(transform.position, Vector3.down, 1.6f))
             {
-                rigid.AddForce(Vector3.up * jumpForce * 100, ForceMode.Impulse);
+                animator.SetBool("Jump", true);
             }
         }
+
+        // zooming
+        defaultCameraDistance = Mathf.Clamp(defaultCameraDistance - Input.mouseScrollDelta.y, 2, 20);
     }
 }

@@ -7,6 +7,9 @@ public class PlayerMovement : MonoBehaviour
     public float movementSpeed;
     public float sensitivity;
     public float jumpForce;
+    public float defaultCameraDistance;
+
+    float cameraDistance = 10000;
 
     Camera playerCamera;
 
@@ -28,16 +31,45 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
+        // camera clipping
+        Vector3 cameraDefaultPos = transform.position + (playerCamera.transform.position - transform.position).normalized * defaultCameraDistance;
+
+        RaycastHit hit;
+
+        if (Physics.Raycast(transform.position,
+                            playerCamera.transform.position - transform.position,
+                            out hit,
+                            Vector3.Distance(cameraDefaultPos, transform.position)))
+        {
+            cameraDistance = Vector3.Distance(hit.point, transform.position) - 1;
+        }
+
+        else
+        {
+            cameraDistance = 10000;
+        }
+
+        playerCamera.transform.position = transform.position + (playerCamera.transform.position - transform.position).normalized * Mathf.Min(defaultCameraDistance, cameraDistance);
+
         // camera rotation
         Vector3 cameraDir = new Vector3(Input.GetAxisRaw("Mouse X"), Input.GetAxisRaw("Mouse Y"), 0);
         Vector3 rotation = cameraDir * sensitivity * Time.deltaTime;
         transform.Rotate(new Vector3(0, rotation.x, 0));
 
-        playerCamera.transform.RotateAround(rigid.position, transform.right, -rotation.y);
+        float xRotation = -rotation.y;
 
+        if (playerCamera.transform.rotation.x > 0.6f) xRotation = Mathf.Clamp(xRotation, xRotation, 0);
+        else if (playerCamera.transform.rotation.x < -0.6f) xRotation = Mathf.Clamp(xRotation, 0, xRotation);
+
+        playerCamera.transform.RotateAround(rigid.position, transform.right, xRotation);
+
+        // jumping
         if (Input.GetButtonDown("Jump"))
         {
-            rigid.AddForce(Vector3.up * jumpForce * 100, ForceMode.Impulse);
+            if (Physics.Raycast(transform.position, Vector3.down, 1.1f))
+            {
+                rigid.AddForce(Vector3.up * jumpForce * 100, ForceMode.Impulse);
+            }
         }
     }
 }

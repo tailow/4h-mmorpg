@@ -11,6 +11,10 @@ public class PlayerMovement : MonoBehaviour
 
     public Animator animator;
 
+    public AudioClip jumpSound;
+
+    public AudioSource source;
+
     float cameraDistance = 10000;
 
     Camera playerCamera;
@@ -77,6 +81,11 @@ public class PlayerMovement : MonoBehaviour
             if (Physics.Raycast(transform.position, Vector3.down, 1.6f))
             {
                 animator.SetBool("Jump", true);
+
+                source.clip = jumpSound;
+
+                if (!source.isPlaying)
+                    source.Play();
             }
         }
 
